@@ -29,6 +29,12 @@ async function run() {
     const spotsCollection = client.db('turioDB').collection('spots');
 
 
+    app.get('/spots', async (req, res) => {
+      const cursor =  spotsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
     app.post('/spots', async (req, res) => {
       const spots = req.body;
       const result = await spotsCollection.insertOne(spots);
