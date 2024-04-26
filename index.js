@@ -25,6 +25,22 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const spotsCollection = client.db('turioDB').collection('spots');
+
+
+    app.post('/spots', async (req, res) => {
+      const spots = req.body;
+      const result = await spotsCollection.insertOne(spots);
+      res.send(result);
+
+    })
+
+
+
+
+    
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
