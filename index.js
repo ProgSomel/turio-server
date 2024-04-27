@@ -9,8 +9,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const uri =
-  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dzik2b9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dzik2b9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -26,44 +25,73 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const spotsCollection = client.db('turioDB').collection('spots');
+    const spotsCollection = client.db("turioDB").collection("spots");
 
+    app.get("/spots/:email", async (req, res) => {
+      const email = req.params.email;
 
-    app.get('/spots', async (req, res) => {
+      console.log(email);
+      const cursor = spotsCollection.find({ userEmail: email });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/spots", async (req, res) => {
       const sort = req.query.sort;
       console.log(sort);
       const sortOptions = {};
-      if (sort === 'asc') {
-        sortOptions.
-        averageCost = 1; 
-      } else if (sort === 'desc') {
-        sortOptions.
-        averageCost = -1;
+      if (sort === "asc") {
+        sortOptions.averageCost = 1;
+      } else if (sort === "desc") {
+        sortOptions.averageCost = -1;
       }
-      const cursor =  spotsCollection.find().sort(sortOptions);
+      const cursor = spotsCollection.find().sort(sortOptions);
       const result = await cursor.toArray();
       res.send(result);
-    })
+    });
 
-    app.get('/spots/:id', async (req, res) => {
+    app.get("/spots/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await spotsCollection.findOne(query);
       res.send(result);
-    })
+    });
 
-    app.post('/spots', async (req, res) => {
+    app.put("/spots/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const spot = req.body;
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          imageUrl : spot.imageUrl,
+          touristsSpotName: spot.touristsSpotName,
+          countryName: spot.countryName,
+          location: spot.location,
+          shortDescription: spot.shortDescription,
+          averageCost: spot.averageCost,
+          seasonality: spot.seasonality,
+          travelTime: spot.travelTime,
+          totalVisitorsPerYear: spot.totalVisitorsPerYear,
+          userEmail: spot.userEmail,
+          userName: spot.userName,
+        },
+      };
+
+      const result = await spotsCollection.updateOne(filter,  updateDoc, options);
+
+      res.send(result);
+
+
+    });
+
+    app.post("/spots", async (req, res) => {
       const spots = req.body;
       const result = await spotsCollection.insertOne(spots);
       res.send(result);
-
-    })
-
-
-
-
-    
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
