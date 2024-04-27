@@ -30,7 +30,17 @@ async function run() {
 
 
     app.get('/spots', async (req, res) => {
-      const cursor =  spotsCollection.find();
+      const sort = req.query.sort;
+      console.log(sort);
+      const sortOptions = {};
+      if (sort === 'asc') {
+        sortOptions.
+        averageCost = 1; 
+      } else if (sort === 'desc') {
+        sortOptions.
+        averageCost = -1;
+      }
+      const cursor =  spotsCollection.find().sort(sortOptions);
       const result = await cursor.toArray();
       res.send(result);
     })
