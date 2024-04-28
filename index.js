@@ -26,35 +26,34 @@ async function run() {
     await client.connect();
 
     const spotsCollection = client.db("turioDB").collection("spots");
-
-    app.get("/spots/:email", async (req, res) => {
-      const email = req.params.email;
-
-      console.log(email);
-      const cursor = spotsCollection.find({ userEmail: email });
-      const result = await cursor.toArray();
-      res.send(result);
-    });
+    const countriesCollection = client.db("turioDB").collection("countries");
 
     app.get("/spots", async (req, res) => {
       const sort = req.query.sort;
-      console.log(sort);
+      const email = req.query.email;
+      const query = email && { userEmail: email };
+
       const sortOptions = {};
       if (sort === "asc") {
         sortOptions.averageCost = 1;
       } else if (sort === "desc") {
         sortOptions.averageCost = -1;
       }
-      const cursor = spotsCollection.find().sort(sortOptions);
+      const cursor = spotsCollection.find(query).sort(sortOptions);
       const result = await cursor.toArray();
       res.send(result);
     });
 
     app.get("/spots/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await spotsCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.post("/spots", async (req, res) => {
+      const spots = req.body;
+      const result = await spotsCollection.insertOne(spots);
       res.send(result);
     });
 
@@ -66,7 +65,7 @@ async function run() {
 
       const updateDoc = {
         $set: {
-          imageUrl : spot.imageUrl,
+          imageUrl: spot.imageUrl,
           touristsSpotName: spot.touristsSpotName,
           countryName: spot.countryName,
           location: spot.location,
@@ -80,25 +79,32 @@ async function run() {
         },
       };
 
-      const result = await spotsCollection.updateOne(filter,  updateDoc, options);
+      const result = await spotsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
 
-      res.send(result);
-
-
-    });
-
-    app.post("/spots", async (req, res) => {
-      const spots = req.body;
-      const result = await spotsCollection.insertOne(spots);
       res.send(result);
     });
 
-    app.delete('/spots/:id', async (req, res) => {
+    app.delete("/spots/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await spotsCollection.deleteOne(query);
       res.send(result);
+    });
+
+
+
+    //! countries 
+    app.get('/countries', async (req, res) => {
+      const cursor =  countriesCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+
     })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
