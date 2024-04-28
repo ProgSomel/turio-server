@@ -31,7 +31,15 @@ async function run() {
     app.get("/spots", async (req, res) => {
       const sort = req.query.sort;
       const email = req.query.email;
-      const query = email && { userEmail: email };
+      const countryName = req.query.countryName;
+
+      const query = {};
+      if (email) {
+        query.userEmail = email;
+      }
+      if (countryName) {
+        query.countryName = countryName;
+      }
 
       const sortOptions = {};
       if (sort === "asc") {
@@ -95,16 +103,12 @@ async function run() {
       res.send(result);
     });
 
-
-
-    //! countries 
-    app.get('/countries', async (req, res) => {
-      const cursor =  countriesCollection.find();
+    //! countries
+    app.get("/countries", async (req, res) => {
+      const cursor = countriesCollection.find();
       const result = await cursor.toArray();
       res.send(result);
-
-    })
-
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
